@@ -28,7 +28,7 @@ class Content_transcode:
                 temp_dic = {"index":index, "codec_type":codec_type, "codec_name":codec, "channels":channels, "language":lang}
                 tracks_dic[index] = temp_dic
 
-            if(stream['codec_type'] == 'video'):
+            if(stream['codec_type'] == 'video') and stream['index'] == 0:
                 index = stream['index']
                 codec = stream['codec_name']
                 codec_type = stream['codec_type']
@@ -38,11 +38,15 @@ class Content_transcode:
             if (stream['codec_type'] == 'subtitle'):
                 index = stream['index']
                 codec = stream['codec_name']
-                lang = stream['tags']['language']
+                if 'language' in stream['tags']:
+                    lang = stream['tags']['language']
+                else:
+                    lang = 'und'
                 codec_type = stream['codec_type']
                 disposition = stream['disposition']['forced']
                 temp_dic = {"index":index, "codec_type":codec_type, "codec_name":codec, "language":lang, "forced":disposition}
                 tracks_dic[index] = temp_dic
+                
         return tracks_dic
 
     def transcode(self):
@@ -88,5 +92,25 @@ class Content_transcode:
                     logging.info(f"This transcode took {round(time.time()-start_time)/60}m")
                     temp_dic = {"codec_type":track['codec_type'], "codec_name":track['codec_name'], "output_file_path": f"{self.output_dir}/{resolution}.mp4", "resolution": resolution, 'output_dir':self.output_dir}
                     job_done[f"{track['index']}_{resolution}"] = temp_dic
+
+            if track['codec_type'] == 'subtitle':
+                output_name = f"{self.output_dir}/{track['language']}_{track['index']}.vtt"
+                if track['forced'] == 1:
+                    output_name = f"{self.output_dir}/{track['language']}_forced_{track['index']}.vtt"
+
+                ffmpeg_cmd = [
+                    app.constants.FFMPEG_BINARY,
+                    "-i", self.file_path,
+                    "-map", f"0:{track['index']}",
+                    "-c:s", "webvtt",
+                    "-y", output_name
+                ]
+                print(ffmpeg_cmd)
+                #Task.execute(self,ffmpeg_cmd)
+                process = subprocess.Popen(ffmpeg_cmd, stderr=subprocess.PIPE ,stdout = subprocess.PIPE )
+                output = process.communicate()
+                
+                temp_dic = {"codec_type":track['codec_type'], "codec_name":track['codec_name'], "output_file_path": output_name,'output_dir':self.output_dir, "forced":track['forced'], "lang": track['language'], "index": track['index'] }
+                job_done[f"{track['index']}"] = temp_dic
 
         return job_done

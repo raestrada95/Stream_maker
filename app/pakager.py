@@ -21,6 +21,11 @@ class Packcontent:
                     commands_dic[counter] = v_config
                     counter += 1
 
+                """ if track['codec_type'] == 'subtitle':
+                    s_config = f"in={track['output_file_path']},stream=text,output=text/{track['index']}_{track['lang']}.vtt,playlist_name=text/{track['index']}_{track['lang']}.m3u8,hls_group_id=text,hls_name=ENGLISH'"
+                    commands_dic[counter] = s_config
+                    counter += 1 """
+
             return commands_dic
 
     def make_shaka_commands(self,x,file_out_path):
