@@ -2,8 +2,12 @@ import logging
 import subprocess
 import json
 import time
+import webvtt
+import os
 
 import app.constants
+from app.sub_lang_detect.lang_detect import Sub_detect
+
 
 class Content_transcode: 
     def __init__(self,file_path,filename,output_dir):
@@ -11,6 +15,7 @@ class Content_transcode:
         self.file_name = filename
         #self.track_dic = list_tracks(self.file_path)
         self.output_dir = output_dir
+        self.webvtt = webvtt
     
     def list_tracks(self):
         ffprobe_cmd =  app.constants.FFPROBE_BINARY +" -hide_banner -show_streams -print_format json "+ self.file_path
@@ -41,7 +46,8 @@ class Content_transcode:
                 if 'language' in stream['tags']:
                     lang = stream['tags']['language']
                 else:
-                    lang = 'und'
+                    lang = "und"
+                    #lang = Sub_detect(self.file_path).lang_detect(stream)
                 codec_type = stream['codec_type']
                 disposition = stream['disposition']['forced']
                 temp_dic = {"index":index, "codec_type":codec_type, "codec_name":codec, "language":lang, "forced":disposition}
@@ -59,8 +65,8 @@ class Content_transcode:
         h264_configs = {
             "360p": "-vf scale=-640:360:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v main -level:v 3.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -minrate 600k -maxrate 600k -bufsize 600k -b:v 600k -y",
             "480p": "-vf scale=842:480:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v main -level:v 3.2 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -minrate 1000k -maxrate 1000k -bufsize 1000k -b:v 1000k  -y",
-            "720p": "-vf scale=1280:720:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 2000k -bufsize 2000k -b:v 2000k -y",
-            "1080p": "-vf scale=1920:1080:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 5000k -bufsize 5000k -b:v 5000k -y"}
+            "720p": "-vf scale=1280:720:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 2500k -bufsize 2500k -b:v 2500k -y",
+            "1080p": "-vf scale=1920:1080:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 5800k -bufsize 5800k -b:v 5800k -y"}
         
         
         for track in self.list_tracks().values():
@@ -94,23 +100,31 @@ class Content_transcode:
                     job_done[f"{track['index']}_{resolution}"] = temp_dic
 
             if track['codec_type'] == 'subtitle':
-                output_name = f"{self.output_dir}/{track['language']}_{track['index']}.vtt"
+                output_name = f"{self.output_dir}/{track['language']}_{track['index']}"
                 if track['forced'] == 1:
-                    output_name = f"{self.output_dir}/{track['language']}_forced_{track['index']}.vtt"
+                    output_name = f"{self.output_dir}/{track['language']}_forced_{track['index']}"
 
                 ffmpeg_cmd = [
                     app.constants.FFMPEG_BINARY,
                     "-i", self.file_path,
                     "-map", f"0:{track['index']}",
-                    "-c:s", "webvtt",
-                    "-y", output_name
+                    "-c:s", "copy",
+                    "-y", output_name+".srt"
                 ]
-                print(ffmpeg_cmd)
+                
+                logging.info(f"Transcoding the subtitle track of {self.file_name} to {output_name}.vtt")
+                
                 #Task.execute(self,ffmpeg_cmd)
                 process = subprocess.Popen(ffmpeg_cmd, stderr=subprocess.PIPE ,stdout = subprocess.PIPE )
                 output = process.communicate()
                 
-                temp_dic = {"codec_type":track['codec_type'], "codec_name":track['codec_name'], "output_file_path": output_name,'output_dir':self.output_dir, "forced":track['forced'], "lang": track['language'], "index": track['index'] }
+                #### Transcode srt to vtt
+                webvtt = self.webvtt.from_srt(output_name+".srt").save()
+                
+                ### Remove srt files
+                os.remove(output_name+".srt")
+                
+                temp_dic = {"codec_type":track['codec_type'], "codec_name":track['codec_name'], "output_file_path": output_name+".vtt",'output_dir':self.output_dir, "forced":track['forced'], "lang": track['language'], "index": track['index'] }
                 job_done[f"{track['index']}"] = temp_dic
 
         return job_done

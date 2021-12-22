@@ -1,9 +1,13 @@
 import subprocess
 import os
+from iso639 import languages
 
 import app.constants
 
 class Packcontent:
+
+    def __init__(self):
+        self.languages = languages
 
     def hls_dash(self,dic):
             commands_dic = {}
@@ -21,10 +25,10 @@ class Packcontent:
                     commands_dic[counter] = v_config
                     counter += 1
 
-                """ if track['codec_type'] == 'subtitle':
-                    s_config = f"in={track['output_file_path']},stream=text,output=text/{track['index']}_{track['lang']}.vtt,playlist_name=text/{track['index']}_{track['lang']}.m3u8,hls_group_id=text,hls_name=ENGLISH'"
+                """if track['codec_type'] == 'subtitle':
+                    s_config = f"in={track['output_file_path']},stream=text,output={track['output_dir']}/text/{track['lang']}_{track['index']}.vtt,language={languages.get(part2b=track['lang']).part1},playlist_name=text/{track['lang']}_{track['index']}.m3u8,hls_group_id=text,hls_name={track['lang']}'"
                     commands_dic[counter] = s_config
-                    counter += 1 """
+                    counter += 1"""
 
             return commands_dic
 
@@ -45,5 +49,4 @@ class Packcontent:
         os.system(self.make_shaka_commands(x,file_out_path))
 
         return True
-
 

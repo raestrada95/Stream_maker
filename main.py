@@ -1,6 +1,7 @@
 from glob import glob
 import logging
 import os
+import time
 
 from app.transcode import Content_transcode
 from app.pakager import Packcontent
@@ -42,5 +43,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    round = 0
+    while True:
+        main()
+
+        logging.info(f"Sleeping for 1 minutes round#{round}")
+        round += 1
+        time.sleep(60)
 
