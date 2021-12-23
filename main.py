@@ -2,6 +2,7 @@ from glob import glob
 import logging
 import os
 import time
+import shutil
 
 from app.transcode import Content_transcode
 from app.pakager import Packcontent
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 #This function will load the files to be transcoded
 def load_files_to_process():
-    files = glob("works/*.mkv")
+    files = glob("jobs/*.mkv")
     logging.info(f'Files to be processed{files}')
     return files
 
@@ -26,7 +27,9 @@ def clean_dir(file_out_path):
     
     for file in files_to_delete:
         os.remove(file)
-    
+
+def mv_to_Jobsdone(origin_file_path,file_name):
+    shutil.move(origin_file_path, f"jobs_done/{file_name}.mkv")
 
 def main():
     
@@ -37,6 +40,7 @@ def main():
         file_out_path = f'output/{create_dir_if_not_exists(file_name)}'
         job = Content_transcode(origin_file_path,file_name,file_out_path).transcode()
         pack_content = Packcontent().pack_file(job,file_out_path)
+        mv_to_Jobsdone(origin_file_path,file_name)
         if pack_content:
             clean_dir(file_out_path)
 
@@ -46,7 +50,6 @@ if __name__ == "__main__":
     round = 0
     while True:
         main()
-
         logging.info(f"Sleeping for 1 minutes round#{round}")
         round += 1
         time.sleep(60)

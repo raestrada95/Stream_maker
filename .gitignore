@@ -3,11 +3,13 @@
 .vscode/settings.json
 output/*
 temp/*
-works/*
+jobs/*
+jobs_done/*
 
 # exception to the rule
 !works/.gitkeep 
-!output/.gitkeep
+!jobs/.gitkeep
+!jobs_done/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

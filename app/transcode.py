@@ -13,7 +13,6 @@ class Content_transcode:
     def __init__(self,file_path,filename,output_dir):
         self.file_path = file_path
         self.file_name = filename
-        #self.track_dic = list_tracks(self.file_path)
         self.output_dir = output_dir
         self.webvtt = webvtt
     
@@ -65,8 +64,8 @@ class Content_transcode:
         h264_configs = {
             "360p": "-vf scale=-640:360:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v main -level:v 3.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -minrate 600k -maxrate 600k -bufsize 600k -b:v 600k -y",
             "480p": "-vf scale=842:480:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v main -level:v 3.2 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -minrate 1000k -maxrate 1000k -bufsize 1000k -b:v 1000k  -y",
-            "720p": "-vf scale=1280:720:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 2500k -bufsize 2500k -b:v 2500k -y",
-            "1080p": "-vf scale=1920:1080:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 5800k -bufsize 5800k -b:v 5800k -y"}
+            "720p": "-vf scale=1280:720:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 2000k -bufsize 2000k -b:v 2000k -y",
+            "1080p": "-vf scale=1920:1080:force_original_aspect_ratio=decrease,crop -vcodec libx264 -preset slow -profile:v high -level:v 4.1 -x264-params scenecut=0:open_gop=0:min-keyint=144:keyint=144 -maxrate 5000k -bufsize 5000k -b:v 5000k -y"}
         
         
         for track in self.list_tracks().values():
